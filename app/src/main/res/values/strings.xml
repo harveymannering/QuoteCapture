@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">QuoteCapture</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="copy_toast_text">Quote copied to clipboard</string>
+    <string name="titleTxt">Book Title</string>
+    <string name="authorTxt">Author</string>
+    <string name="pagesTxt">Notes</string>
+    <string name="sortBy">Sort By </string>
+    <string name="sortByList1">Date Created</string>
+    <string name="sortByList2">Book</string>
+    <string name="sortByList3">Author</string>
+    <string name="sortByList4">Alphabetical</string>
+    <string name="deleteWarning">Are you sure you would like to delete this quote?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="loading">"Loading.  Please wait..."</string>
+    <string name="quote">Quote</string>
+    <!-- TODO: Remove or change this placeholder text -->
+</resources>

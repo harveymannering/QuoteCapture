@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/colourPickerLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TableRow android:background="@color/colorBlack"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout android:id="@+id/layoutYellow"
+            android:gravity="center">
+            <ImageButton
+                android:id="@+id/buttonYellow"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/ic_colour_yellow"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/layoutPink"
+            android:gravity="center">
+            <ImageButton
+                android:id="@+id/buttonPink"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/ic_colour_pink"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/layoutGreen"
+            android:gravity="center">
+            <ImageButton
+                android:id="@+id/buttonGreen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/ic_colour_green"/>
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/layoutBlue"
+            android:gravity="center">
+            <ImageButton
+                android:id="@+id/buttonBlue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginVertical="10dp"
+                android:background="@drawable/ic_colour_blue"/>
+        </LinearLayout>
+    </TableRow>
+</TableLayout>
