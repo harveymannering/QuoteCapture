@@ -173,6 +173,12 @@ public class PictureTakenActivity extends AppCompatActivity {
         //Check if the image was loaded from storage
         loaded_image = getIntent().getExtras().getBoolean("LOADED_IMAGE");
 
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         //Get dimensions of the toolbar
         Drawable drawable = getResources().getDrawable(R.drawable.ic_adjust_black_24dp);
         toolbarHeight = convertDpToPixel((float) drawable.getMinimumHeight(), getApplicationContext());
@@ -257,7 +263,7 @@ public class PictureTakenActivity extends AppCompatActivity {
             public void onClick(final View v) {
                 //Display loading screen
                 dialog = ProgressDialog.show(PictureTakenActivity.this, "",
-                                getResources().getString(R.string.loading), true);
+                        getResources().getString(R.string.loading), true);
 
                 //String highlightedImageURI = dv.SaveCanvas();
                 new Thread(new Runnable() {
@@ -329,6 +335,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                         //Set up new activity
                         Intent intent = new Intent(getApplicationContext(), ViewQuote.class);
                         intent.putExtra("QUOTE_ID", quoteID);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
 
 

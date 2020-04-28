@@ -178,7 +178,7 @@ public class ViewQuote extends AppCompatActivity {
                 Intent intent  = new Intent(context, PictureTakenActivity.class);
                 intent.putExtra("FILENAME", quote.getImageURI());
                 intent.putExtra("QUOTE_ID", quote.getQuoteId());
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startActivity(intent);
             }
         });

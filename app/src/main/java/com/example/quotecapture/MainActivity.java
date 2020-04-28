@@ -83,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
         viewQuote.setQuoteID(id);*/
         Intent viewQuote = new Intent(this, ViewQuote.class);
         viewQuote.putExtra("QUOTE_ID", id);
+        //viewQuote.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(viewQuote);
     }
 
