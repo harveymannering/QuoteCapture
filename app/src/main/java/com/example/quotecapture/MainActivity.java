@@ -19,8 +19,8 @@ import android.view.WindowManager;
 
 public class MainActivity extends AppCompatActivity implements QuoteList.Listener {
 
-    static long QuoteID;
     static ViewPager viewPager;
+    public static int pagerPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,9 +36,8 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
 
         setContentView(R.layout.activity_main);
 
-        QuoteID = 0;
-        if (getIntent() != null && getIntent().getExtras() != null)
-            QuoteID = getIntent().getExtras().getLong("QUOTE_ID");
+        BuildUI();
+
     }
 
     //Add the pager to the screen which contains the camera and the quotes list
@@ -46,9 +45,6 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
         viewPager = (ViewPager) findViewById(R.id.viewpager);
         viewPager.setAdapter(new MyAdapter(getSupportFragmentManager()));
 
-        if (QuoteID > 0) {
-            viewPager.setCurrentItem(1);
-        }
     }
 
     //This will be called after permission is granted
@@ -61,13 +57,19 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
     @Override
     protected void onResume() {
         super.onResume();
-        BuildUI();
+        viewPager.setCurrentItem(pagerPosition);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        pagerPosition = viewPager.getCurrentItem();
     }
 
     @Override
     public void itemClicked(long id) {
         //Set up new fragment and fragment manager
-        ViewQuoteFragment viewQuote = new ViewQuoteFragment(false);
+        /*ViewQuoteFragment viewQuote = new ViewQuoteFragment(false);
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.small_fragment_container, viewQuote, "ViewQuoteFragment");
 
@@ -78,7 +80,10 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
         ft.addToBackStack(null);
         ft.commit();
 
-        viewQuote.setQuoteID(id);
+        viewQuote.setQuoteID(id);*/
+        Intent viewQuote = new Intent(this, ViewQuote.class);
+        viewQuote.putExtra("QUOTE_ID", id);
+        startActivity(viewQuote);
     }
 
     private void requestStoragePermission() {
@@ -116,11 +121,8 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
                 return new CameraFragment();
             }
             //this else if is for when a quote has just been read via OCR
-            else if (QuoteID > 0) {
-                return new MainFragment(true, QuoteID);
-            }
             else{
-                return new MainFragment(false, 0);
+                return new MainFragment();
             }
 
         }

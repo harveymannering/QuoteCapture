@@ -18,8 +18,10 @@
         android:supportsRtl="true"
         android:largeHeap="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PictureTakenActivity"></activity>
-        <activity android:name=".ViewQuote" />
+        <activity android:name=".PictureTakenActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name=".ViewQuote"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">

@@ -1,5 +1,7 @@
 package com.example.quotecapture;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.constraintlayout.widget.ConstraintSet;
@@ -71,7 +73,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 
 import static android.content.ContentValues.TAG;
 
@@ -87,8 +93,9 @@ public class PictureTakenActivity extends AppCompatActivity {
     boolean loaded_image = false;
 
     //Drawing objects
-    DrawingView dv;
-    DrawingView dv2;
+    Queue<DrawingView> drawingViews;
+    DrawingView previous_dv;
+    //DrawingView dv2;
     Paint currentPaint;
 
     //Buttons at the bottom of the screen
@@ -142,6 +149,8 @@ public class PictureTakenActivity extends AppCompatActivity {
     //Rotation animations
     AnimationSet animationSetImage;
     AnimationSet animationSetCanvas;
+    AlphaAnimation anim1; //fades in new canvas
+    AlphaAnimation anim2; //fades out old canvas
 
 
     @Override
@@ -159,7 +168,7 @@ public class PictureTakenActivity extends AppCompatActivity {
         //Get the QuoteID (if it exists)
         quoteID = 0;
         if (getIntent() != null && getIntent().getExtras() != null) {
-            quoteID = getIntent().getExtras().getLong("QUOTE_ID");
+            quoteID = getIntent().getExtras().getInt("QUOTE_ID");
         }
         //Check if the image was loaded from storage
         loaded_image = getIntent().getExtras().getBoolean("LOADED_IMAGE");
@@ -208,11 +217,13 @@ public class PictureTakenActivity extends AppCompatActivity {
         image.setId(View.generateViewId());
 
         //Drawing canvas
-        dv = new DrawingView(this);
+        drawingViews = new LinkedList<DrawingView>();
+        DrawingView dv = new DrawingView(this);
         dv.setId(View.generateViewId());
         dv.loadImage(0,0);
         dv.setLayoutParams(new ViewGroup.LayoutParams(canvasWidth, canvasHeight));
         dv.setAlpha(0.3f);
+        drawingViews.add(dv);
         highlightingSwitcher = new ViewSwitcher(this);
         highlightingSwitcher.setId(View.generateViewId());
         highlightingSwitcher.addView(dv);
@@ -287,13 +298,13 @@ public class PictureTakenActivity extends AppCompatActivity {
                             bitmapImage = ImageProcessor.LoadImageIntoBitmap(uriString, displaySize);
                         }
 
-                        View content = dv;
+                        View content = drawingViews.peek();
                         content.setDrawingCacheEnabled(true);
                         content.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
 
                         //Saves the highlighting as an image
                         Bitmap bitmapHighlight = content.getDrawingCache();
-                        File fileHighlights = dv.getOutputMediaFile("_h");
+                        File fileHighlights = drawingViews.peek().getOutputMediaFile("_h");
                         saveBitmap(fileHighlights, bitmapHighlight);
 
                         //Load images
@@ -304,7 +315,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                         String text = ImageProcessor.OpticalCharacterRecognition(resultImage, getApplicationContext());
 
                         //Saves the results image
-                        File fileResults = dv.getOutputMediaFile("_r");
+                        File fileResults = drawingViews.peek().getOutputMediaFile("_r");
                         saveBitmap(fileResults, resultImage);
 
                         //Save the quote to database
@@ -316,7 +327,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                             quoteID = database.addQuote(db, text, Calendar.getInstance().getTime(), 0, uriString, fileHighlights.getAbsolutePath(), fileResults.getAbsolutePath());
                         db.close();
                         //Set up new activity
-                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                        Intent intent = new Intent(getApplicationContext(), ViewQuote.class);
                         intent.putExtra("QUOTE_ID", quoteID);
                         startActivity(intent);
 
@@ -613,7 +624,10 @@ public class PictureTakenActivity extends AppCompatActivity {
                 if (PopupColour != null)
                     RemoveColourPopup();
 
-                if ((animationSetImage == null || animationSetImage.hasEnded()) && (animationSetCanvas == null || animationSetCanvas.hasEnded())) {
+                if ((animationSetImage == null || animationSetImage.hasEnded()) &&
+                        (animationSetCanvas == null || animationSetCanvas.hasEnded()) &&
+                        (anim1 == null || anim1.hasEnded()) &&
+                        (anim2 == null || anim2.hasEnded())) {
                     //Rotate Animation
                     final RotateAnimation rotateAnimImage = new RotateAnimation((-90) * rotations, (-90) * (rotations + 1),
                             RotateAnimation.RELATIVE_TO_SELF, 0.5f,
@@ -690,7 +704,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                         public void onAnimationRepeat(Animation animation) {
                         }
                     });
-                    dv.startAnimation(animationSetCanvas);
+                    drawingViews.peek().startAnimation(animationSetCanvas);
                     image.startAnimation(animationSetImage);
                 }
             }
@@ -759,18 +773,6 @@ public class PictureTakenActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        //Get original quote id
-        long original_quote_id = 0;
-        if (getIntent() != null && getIntent().getExtras() != null) {
-            original_quote_id = getIntent().getExtras().getLong("QUOTE_ID");
-        }
-        //Go back to camera page if appropriate
-        if (original_quote_id == 0){
-            MainActivity.viewPager.setCurrentItem(0);
-        }
-
-
-
         //if the image is one we've saved and the previous screen was the camera...
         if (quoteID == 0){
             //...delete the image
@@ -783,7 +785,7 @@ public class PictureTakenActivity extends AppCompatActivity {
     private void RefreshDrawingView(){
 
         //Get the image from the drawing view
-        View content = dv;
+        View content = drawingViews.peek();
         content.setDrawingCacheEnabled(true);
         content.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
         Bitmap bitmapHighlighting = content.getDrawingCache();
@@ -835,33 +837,32 @@ public class PictureTakenActivity extends AppCompatActivity {
 
 
         //Build and add replacement drawing view to layout
-        DrawingView dv3 = new DrawingView(this);
-        dv3.setId(View.generateViewId());
-        dv3.setLayoutParams(new ViewGroup.LayoutParams(canvasWidth, canvasHeight));
-        dv3.setAlpha(0.3f);
-        dv3.setRotatedBitmap(outputimage);
+        DrawingView dv = new DrawingView(this);
+        dv.setId(View.generateViewId());
+        dv.setLayoutParams(new ViewGroup.LayoutParams(canvasWidth, canvasHeight));
+        dv.setAlpha(0.3f);
+        dv.setRotatedBitmap(outputimage);
 
 
         //Fade in animation
-        AlphaAnimation anim1 = new AlphaAnimation(0.0f, 1.0f);
-        anim1.setDuration(1000);
-        //anim1.setRepeatMode(Animation.REVERSE);
+        anim1 = new AlphaAnimation(0.0f, 1.0f);
+        anim1.setDuration(100);
+        anim1.setRepeatMode(Animation.REVERSE);
         anim1.setFillAfter(true);
 
         //Fade out animation
-        AlphaAnimation anim2 = new AlphaAnimation(1.0f, 0.0f);
-        anim2.setDuration(1000);
+        anim2 = new AlphaAnimation(1.0f, 0.0f);
+        anim2.setDuration(100);
         anim2.setRepeatMode(Animation.REVERSE);
-        //anim2.setFillAfter(true);
+        anim2.setFillAfter(true);
         anim2.setAnimationListener(new Animation.AnimationListener() {
             @Override
             public void onAnimationStart(Animation animation) { }
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                //highlightingSwitcher.removeView(dv);
-                //dv = dv2;
-
+                previous_dv = drawingViews.peek();
+                drawingViews.remove();
             }
 
             @Override
@@ -871,14 +872,11 @@ public class PictureTakenActivity extends AppCompatActivity {
         highlightingSwitcher.setInAnimation(anim1);
         highlightingSwitcher.setOutAnimation(anim2);
         if (viewsHaveBeenSwitched == true){
-            highlightingSwitcher.removeView(dv);
-            dv = dv2;
+            highlightingSwitcher.removeView(previous_dv);
         }
-        highlightingSwitcher.addView(dv3);
-        dv2 = dv3;
-
+        highlightingSwitcher.addView(dv);
+        drawingViews.add(dv);
         highlightingSwitcher.showNext();
-
         viewsHaveBeenSwitched = true;
         //dv.setRotation(90);
         //dv.setScaleX(1/scale);

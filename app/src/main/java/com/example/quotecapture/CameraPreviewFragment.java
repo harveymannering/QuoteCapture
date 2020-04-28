@@ -27,6 +27,7 @@ import android.util.Size;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -35,6 +36,8 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.Toast;
+import android.widget.ZoomControls;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -61,7 +64,9 @@ public class CameraPreviewFragment extends Fragment {
         private SurfaceView preview;
         private MediaRecorder mediaRecorder;
         FrameLayout cameraPreview;
-        //android.hardware.Camera.Size cameraSize;
+        private ZoomControls zoomControls ;
+
+    //android.hardware.Camera.Size cameraSize;
 
         //Filename of the last picture taken
         String filename;
@@ -361,6 +366,8 @@ public class CameraPreviewFragment extends Fragment {
     public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
         private SurfaceHolder mHolder;
         private Camera mCamera;
+        float mDist = 0;
+
 
         public CameraPreview(Context context, Camera camera) {
             super(context);
@@ -400,7 +407,6 @@ public class CameraPreviewFragment extends Fragment {
                 // preview surface does not exist
                 return;
             }
-
 
             // stop preview before making changes
             try {
@@ -467,6 +473,75 @@ public class CameraPreviewFragment extends Fragment {
             //Return camera
             return camera;
         }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            // Get the pointer ID
+            Camera.Parameters params = mCamera.getParameters();
+            int action = event.getAction();
+
+
+            if (event.getPointerCount() > 1) {
+                // handle multi-touch events
+                if (action == MotionEvent.ACTION_POINTER_DOWN) {
+                    mDist = getFingerSpacing(event);
+                } else if (action == MotionEvent.ACTION_MOVE && params.isZoomSupported()) {
+                    mCamera.cancelAutoFocus();
+                    handleZoom(event, params);
+                }
+            } else {
+                // handle single touch events
+                if (action == MotionEvent.ACTION_UP) {
+                    handleFocus(event, params);
+                }
+            }
+            return true;
+        }
+
+        private void handleZoom(MotionEvent event, Camera.Parameters params) {
+            int maxZoom = params.getMaxZoom();
+            int zoom = params.getZoom();
+            float newDist = getFingerSpacing(event);
+            if (newDist > mDist) {
+                //zoom in
+                if (zoom < maxZoom)
+                    zoom++;
+            } else if (newDist < mDist) {
+                //zoom out
+                if (zoom > 0)
+                    zoom--;
+            }
+            mDist = newDist;
+            params.setZoom(zoom);
+            mCamera.setParameters(params);
+        }
+
+        public void handleFocus(MotionEvent event, Camera.Parameters params) {
+            int pointerId = event.getPointerId(0);
+            int pointerIndex = event.findPointerIndex(pointerId);
+            // Get the pointer's current position
+            float x = event.getX(pointerIndex);
+            float y = event.getY(pointerIndex);
+
+            List<String> supportedFocusModes = params.getSupportedFocusModes();
+            if (supportedFocusModes != null && supportedFocusModes.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                mCamera.autoFocus(new Camera.AutoFocusCallback() {
+                    @Override
+                    public void onAutoFocus(boolean b, Camera camera) {
+                        // currently set to auto-focus on single touch
+                    }
+                });
+            }
+        }
+
+        /** Determine the space between the first two fingers */
+        private float getFingerSpacing(MotionEvent event) {
+            // ...
+            float x = event.getX(0) - event.getX(1);
+            float y = event.getY(0) - event.getY(1);
+            return (float)Math.sqrt(x * x + y * y);
+        }
+
     }
 }
 

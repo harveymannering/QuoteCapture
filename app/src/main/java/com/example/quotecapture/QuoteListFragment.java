@@ -211,6 +211,12 @@ public class QuoteListFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        RefreshList();
+    }
+
     private void RefreshList(){
         QuoteList quoteListQuote = new QuoteList();
         FragmentTransaction ft = getFragmentManager().beginTransaction();
