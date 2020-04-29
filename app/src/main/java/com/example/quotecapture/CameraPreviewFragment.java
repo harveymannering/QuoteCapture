@@ -89,8 +89,13 @@ public class CameraPreviewFragment extends Fragment {
                     //Unsafe to take  picture while another is being saved
                     if (safeToTakePitcutre == true){
                         //Take and save the picture
-                        mCamera.takePicture(null, null, mPicture);
-                        safeToTakePitcutre = false;
+                        try {
+                            mCamera.takePicture(null, null, mPicture);
+                            safeToTakePitcutre = false;
+                        }
+                        catch (Exception e){
+                            Toast.makeText(getContext(), "Error accessing camera", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
             });

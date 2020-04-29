@@ -20,6 +20,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
+import android.graphics.LinearGradient;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -53,6 +54,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -141,6 +143,7 @@ public class PictureTakenActivity extends AppCompatActivity {
     //Rotate button variables
     ImageView image;
     ViewSwitcher highlightingSwitcher;
+    LinearLayout splashScreen;
     boolean viewsHaveBeenSwitched;
     int rotations = 0;
     int imageWidth = 0;
@@ -173,11 +176,10 @@ public class PictureTakenActivity extends AppCompatActivity {
         //Check if the image was loaded from storage
         loaded_image = getIntent().getExtras().getBoolean("LOADED_IMAGE");
 
-
+        CreateUI();
     }
 
-    @Override
-    protected void onResume() {
+    private void CreateUI() {
         super.onResume();
         //Get dimensions of the toolbar
         Drawable drawable = getResources().getDrawable(R.drawable.ic_adjust_black_24dp);
@@ -635,6 +637,18 @@ public class PictureTakenActivity extends AppCompatActivity {
                         (animationSetCanvas == null || animationSetCanvas.hasEnded()) &&
                         (anim1 == null || anim1.hasEnded()) &&
                         (anim2 == null || anim2.hasEnded())) {
+                    //disables drawing
+                    //drawingViews.peek().setEnabled(false);
+                    //Add invisible splash screen to disable touch event during animation
+                    splashScreen = new LinearLayout(getBaseContext());
+                    splashScreen.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                    Button but = new Button(getBaseContext());
+                    but.setText("SCREEN DISABLED WHILE ROTATING");
+                    but.setAlpha(0f);
+                    but.setLayoutParams(new LinearLayout.LayoutParams(displaySize.x, (int) (displaySize.y * 0.9)));
+                    splashScreen.addView(but);
+                    layout.addView(splashScreen);
+
                     //Rotate Animation
                     final RotateAnimation rotateAnimImage = new RotateAnimation((-90) * rotations, (-90) * (rotations + 1),
                             RotateAnimation.RELATIVE_TO_SELF, 0.5f,
@@ -870,6 +884,7 @@ public class PictureTakenActivity extends AppCompatActivity {
             public void onAnimationEnd(Animation animation) {
                 previous_dv = drawingViews.peek();
                 drawingViews.remove();
+                layout.removeView(splashScreen);
             }
 
             @Override
@@ -1049,7 +1064,6 @@ public class PictureTakenActivity extends AppCompatActivity {
         protected void onDraw(Canvas canvas) {
             super.onDraw(canvas);
             canvas.drawBitmap( mBitmap, 0, 0, null);
-            //setLayerType(View.LAYER_TYPE_SOFTWARE, null);
             //Draws previous lines
             for (int i = 0; i < linesDrawn.size(); i++)
                 canvas.drawPath(linesDrawn.get(i).first, linesDrawn.get(i).second);
@@ -1072,12 +1086,14 @@ public class PictureTakenActivity extends AppCompatActivity {
         private void touch_move(float x, float y) {
             float dx = Math.abs(x - mX);
             float dy = Math.abs(y - mY);
-            if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                currentPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
-                mX = x;
-                mY = y;
-                //circlePath.reset();
-                //circlePath.addCircle(mX, mY, 30, Path.Direction.CW);
+            if (drawingViews.peek().equals(this)) {
+                if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
+                    currentPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
+                    mX = x;
+                    mY = y;
+                    //circlePath.reset();
+                    //circlePath.addCircle(mX, mY, 30, Path.Direction.CW);
+                }
             }
         }
 
@@ -1096,6 +1112,9 @@ public class PictureTakenActivity extends AppCompatActivity {
             //mCanvas.drawPath(currentPath,  currentPaint);
             // kill this so we don't double draw
             //mPath.reset();
+            if (!drawingViews.peek().equals(this))
+                setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
         }
 
         @Override
