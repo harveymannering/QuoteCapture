@@ -15,6 +15,11 @@ public class Quote {
 
     Quote(String q){
         quoteText = q;
+        date = new Date();
+        book= new Book(0);
+        imageURI = "";
+        highlightedImagedURI = "";
+        combinedImageURI = "";
     }
 
 

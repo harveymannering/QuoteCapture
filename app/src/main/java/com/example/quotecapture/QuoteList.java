@@ -5,20 +5,17 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.ListFragment;
 
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TwoLineListItem;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +36,12 @@ public class QuoteList extends ListFragment {
         Database database = new Database(getContext());
         SQLiteDatabase db = database.getReadableDatabase();
         quotes = database.getAllQuotes(db);
+        database.log(db, "e");
+
+        //Display log file id developer mode is on
+        if (database.isDeveloperModeOn(db))
+            quotes.add(database.getLogFile(db));
+
         List<String> names = new ArrayList<String>();
         for (Quote q : quotes)
             names.add(q.getQuoteId() + "");

@@ -38,6 +38,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.Pair;
@@ -80,6 +81,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.content.ContentValues.TAG;
 
@@ -110,6 +113,8 @@ public class PictureTakenActivity extends AppCompatActivity {
     int canvasWidth = 0;
     int canvasHeight = 0;
     Point displaySize;
+
+    static int dev_mode_count = 0;
 
     //Settings
     enum COLOUR {YELLOW(0), PINK(1), GREEN(2), BLUE(3), ERASER(4);
@@ -154,6 +159,9 @@ public class PictureTakenActivity extends AppCompatActivity {
     AnimationSet animationSetCanvas;
     AlphaAnimation anim1; //fades in new canvas
     AlphaAnimation anim2; //fades out old canvas
+
+    //Developer mode variables
+    private boolean hasTimerStarted = false;
 
 
     @Override
@@ -456,6 +464,44 @@ public class PictureTakenActivity extends AppCompatActivity {
         colorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
+                //Developer mode timer
+                Timer timer = new Timer();
+                dev_mode_count++;
+                if (hasTimerStarted == false) {
+                    hasTimerStarted = true;
+                    //Timer used to toggle developer mode
+                    TimerTask timerTask = new TimerTask() {
+                        private Handler updateUI = new Handler(){
+                            @Override
+                            public void dispatchMessage(Message msg) {
+                                super.dispatchMessage(msg);
+                                if (dev_mode_count >= 25) {
+                                    Database database = new Database(getApplicationContext());
+                                    SQLiteDatabase db = database.getWritableDatabase();
+                                    if (database.isDeveloperModeOn(db) == false) {
+                                        database.setDeveloperMode(db, true);
+                                        Toast.makeText(getApplicationContext(), "Developer Mode On", Toast.LENGTH_SHORT).show();
+                                    }
+                                    else if (database.isDeveloperModeOn(db) == true) {
+                                        database.setDeveloperMode(db, false);
+                                        Toast.makeText(getApplicationContext(), "Developer Mode Off", Toast.LENGTH_SHORT).show();
+                                    }
+                                    dev_mode_count = 0;
+                                }else{
+                                    dev_mode_count--;
+                                }
+                                hasTimerStarted = false;
+                            }
+                        };
+
+                        public void run() {
+                            try {
+                                updateUI.sendEmptyMessage(0);
+                            } catch (Exception e) {e.printStackTrace(); }
+                        }
+                    };
+                    timer.schedule(timerTask, 5000);
+                }
                 //Remove the brush size popup if its currently being displayed
                 if (PopupBrushSize != null)
                     RemoveBrushSizePopup();

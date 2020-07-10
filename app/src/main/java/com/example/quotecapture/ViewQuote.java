@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.Window;
@@ -27,8 +28,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,6 +79,12 @@ public class ViewQuote extends AppCompatActivity {
         super.onResume();
         int quoteID = (int) getIntent().getExtras().getLong("QUOTE_ID");
         quote = database.getQuote(db, quoteID);
+
+        if (quote.getQuoteText().equals("Error")) {
+            //CODE for TESTING
+            quote = database.getLogFile(db);
+        }
+
         //Textbox
         quoteTextView = (TextView) findViewById(R.id.quoteText);
         quoteTextView.setText(quote.getQuoteText());

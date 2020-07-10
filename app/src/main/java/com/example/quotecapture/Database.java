@@ -3,27 +3,22 @@ package com.example.quotecapture;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
-
-import static android.content.ContentValues.TAG;
 
 public class Database extends SQLiteOpenHelper {
     private static final String DB_NAME = "QuoteCaptureDB";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
 
     Database(Context context){
         super(context, DB_NAME, null, DB_VERSION);
@@ -76,6 +71,16 @@ public class Database extends SQLiteOpenHelper {
                     "TITLE TEXT, " +
                     "AUTHOR TEXT)");
         }
+
+        if (oldVersion < 4){
+            //LOG TABLE
+            //DATE  MESSAGE
+            db.execSQL("CREATE TABLE DEVELOPER_LOG " +
+                    "(_id INTEGER PRIMARY KEY, " +
+                    "DATE DATETIME," +
+                    "MESSAGE TEXT)");
+            db.execSQL("ALTER TABLE SETTINGS ADD COLUMN DEVELOPER_MODE INT DEFAULT 0");
+        }
     }
 
     public void updateSettings(SQLiteDatabase db, int sortBy){
@@ -85,6 +90,94 @@ public class Database extends SQLiteOpenHelper {
 
         //Update database
         db.update("SETTINGS", s, null, null);
+    }
+
+    public void setDeveloperMode(SQLiteDatabase db, boolean developerMode){
+        //Define input parameters
+        ContentValues s = new ContentValues();
+        s.put("DEVELOPER_MODE", developerMode ? 1 : 0);
+
+        //Update database
+        db.update("SETTINGS", s, null, null);
+    }
+
+    public boolean isDeveloperModeOn(SQLiteDatabase db){
+        //Set what the settings are
+        int developer_mode = 0;
+        try{
+            //Define cursor for accessing data
+            Cursor cursor = db.query("SETTINGS",
+                    new String[] {
+                            "DEVELOPER_MODE INT",
+                    },
+                    null, null, null, null, null);
+
+            //Move cursor to first record
+            if (cursor.moveToFirst())
+                developer_mode = cursor.getInt(0);
+
+            //Close database resources
+            cursor.close();
+
+        } catch (Exception e) {
+
+        }
+        return developer_mode == 0 ? false : true;
+    }
+
+    public Quote getLogFile(SQLiteDatabase db){
+        String logText = "";
+        try{
+            //Define cursor for accessing data
+            Cursor cursor = db.query("DEVELOPER_LOG",
+                    new String[] {"MESSAGE TEXT",
+                                  "DATE DATETIME",},
+                    null, null, null, null, null);
+
+            //Move cursor to first record
+            if (cursor.moveToFirst()){
+                logText += " \n" + cursor.getString(0);
+
+                //Loop until all records have been processed
+                while (cursor.moveToNext()) {
+                    logText += cursor.getString(1) + " - " + cursor.getString(0) + " \n" ;
+                }
+            }
+
+            //Close database resources
+            cursor.close();
+
+        } catch (Exception e) {
+
+        }
+
+        return new Quote(logText);
+    }
+
+
+    public void log(SQLiteDatabase db, String message){
+        SimpleDateFormat dateFormat = new SimpleDateFormat(
+                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        ContentValues logValues = new ContentValues();
+
+        //Add parameters
+        logValues.put("DATE", dateFormat.format(Calendar.getInstance().getTime()));
+        logValues.put("MESSAGE", message);
+
+        //Run the SQL (and returns the id)
+        db.insert("DEVELOPER_LOG", null, logValues);
+
+        //Delete old records
+        long count = DatabaseUtils.queryNumEntries(db, "DEVELOPER_LOG");
+        if (count > 10000){
+            Cursor c = db.query("DEVELOPER_LOG", new String[] {"_id"}, null, null, null, null, "DATE", "1");
+            if (c.moveToFirst()){
+                String id = c.getString(0);
+                c.close();
+                db.delete("DEVELOPER_LOG", "_id = " + id, null);
+            }
+        }
+
     }
 
     //Adds a quote to the table
