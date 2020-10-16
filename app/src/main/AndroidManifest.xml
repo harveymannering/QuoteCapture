@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.quotecapture">
+    package="com.businesscompany.quotecapture">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -18,12 +18,12 @@
         android:supportsRtl="true"
         android:largeHeap="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".PictureTakenActivity"
+        <activity android:name="com.businesscompany.quotecapture.PictureTakenActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name=".ViewQuote"
+        <activity android:name="com.businesscompany.quotecapture.ViewQuote"
             android:screenOrientation="portrait"/>
         <activity
-            android:name=".MainActivity"
+            android:name="com.businesscompany.quotecapture.MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
