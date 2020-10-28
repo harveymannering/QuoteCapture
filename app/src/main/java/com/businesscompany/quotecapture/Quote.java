@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class Quote {
 
+    //Quote data from database
     private int quoteId;
     private String quoteText;
     private Date date;
@@ -13,7 +14,9 @@ public class Quote {
     private String combinedImageURI;
 
 
+    //Basic constructor
     Quote(String q){
+        //default values
         quoteText = q;
         date = new Date();
         book= new Book(0);
@@ -23,6 +26,7 @@ public class Quote {
     }
 
 
+    //Full constructor
     Quote(int id, String text, Date d, Book b, String URI, String highlightedURI, String combinedURI){
         quoteId = id;
         quoteText = text;
@@ -33,6 +37,7 @@ public class Quote {
         combinedImageURI = combinedURI;
     }
 
+    //Getters and Setters
     public String getCombinedImageURI() {
         return  combinedImageURI == null ? "" : combinedImageURI;
     }

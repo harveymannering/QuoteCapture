@@ -21,6 +21,7 @@ public class ImageProcessor {
 
         Bitmap b;
         try {
+            //Loads from file into local bitmap
             File f = new File(uriString);
             b = BitmapFactory.decodeStream(new FileInputStream(f)).copy(Bitmap.Config.ARGB_8888, true);
 
@@ -34,6 +35,8 @@ public class ImageProcessor {
                 matrix.postScale(scaleX, scaleX);
             else
                 matrix.postScale(scaleY, scaleY);
+
+            //Recreates bitmap with the corrected dimensions
             b = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
         }
         catch(Exception e){
@@ -56,6 +59,7 @@ public class ImageProcessor {
                 matrix.postScale(scaleX, scaleX);
             else
                 matrix.postScale(scaleY, scaleY);
+            //Recreates bitmap with the corrected dimensions
             b = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
         }
         catch(Exception e){
@@ -64,11 +68,12 @@ public class ImageProcessor {
         return b;
     }
 
-
+    //TODO: Simplify these methods, too much repeated code in this class
     static Bitmap LoadBlankImageIntoBitmap(String uriString, Point displaySize){
 
         Bitmap b;
         try {
+            //Loads from file into local bitmap
             File f = new File(uriString);
             b = BitmapFactory.decodeStream(new FileInputStream(f)).copy(Bitmap.Config.ARGB_8888, true);
 
@@ -82,7 +87,7 @@ public class ImageProcessor {
                 matrix.postScale(scaleX, scaleX);
             else
                 matrix.postScale(scaleY, scaleY);
-
+            //Recreates bitmap with the corrected dimensions
             b = Bitmap.createBitmap(b.getWidth(), b.getHeight(), Bitmap.Config.ARGB_8888);
         }
         catch(Exception e){
@@ -95,6 +100,7 @@ public class ImageProcessor {
 
         Bitmap b;
         try {
+            //Load image from file
             File f = new File(uriString);
             b = BitmapFactory.decodeStream(new FileInputStream(f)).copy(Bitmap.Config.ARGB_8888, true);
 
@@ -107,7 +113,7 @@ public class ImageProcessor {
                 matrix.postScale(scaleX, scaleX);
             else
                 matrix.postScale(scaleY, scaleY);
-
+            //Recreates bitmap with the corrected dimensions
             b = Bitmap.createBitmap(b, 0, 0, b.getWidth(), b.getHeight(), matrix, true);
         }
         catch(Exception e){
@@ -121,17 +127,14 @@ public class ImageProcessor {
         returnBitmap.eraseColor(Color.WHITE); // Sets bitmap to be all white
 
         int startY =  Math.abs((highlighting.getHeight() - image.getHeight()) / 2);
-        //int endY = startY + image.getHeight();
-
         int startX =  Math.abs((highlighting.getWidth() - image.getWidth()) / 2);
-        //int endX = startX + image.getWidth();
 
         //Build the image and find where the cropping should start from
         int cropStartX = 0, cropStartY = returnBitmap.getWidth(), cropEndX = 0, cropEndY = 0;
         boolean noHighlighting = true;
         for (int x = 0; x < returnBitmap.getWidth(); x++){
             for (int y = 0; y < returnBitmap.getHeight(); y++){
-                //If that pixel is highlighted
+                //If that pixel is highlighted save it, if not ignore it
                 if (highlighting.getPixel(startX + x, startY + y) != 0) {
                     returnBitmap.setPixel(x, y, image.getPixel(x, y));
                     if (cropStartX == 0)
@@ -144,7 +147,6 @@ public class ImageProcessor {
                         cropEndY = y;
                     noHighlighting  = false;
                 }
-                //If that pixel is not highlighted
             }
         }
 
@@ -158,11 +160,15 @@ public class ImageProcessor {
     static String OpticalCharacterRecognition(Bitmap image, Context context){
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context).build();
         Frame frame = new Frame.Builder().setBitmap(image).build();
+        //Performs OCR
         SparseArray<TextBlock> text = textRecognizer.detect(frame);
+        //Formats output
         String returnText = "";
         if (text.size() > 0)
+            //Concatenate all text blocks
             for (int i = 0; i < text.size(); i++){
                 returnText += text.get(i).getValue();
+                //Add new line in between each block of text
                 if (i != text.size()-1)
                     returnText += "\n";
             }

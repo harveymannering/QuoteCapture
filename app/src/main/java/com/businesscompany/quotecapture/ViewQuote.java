@@ -48,7 +48,6 @@ public class ViewQuote extends AppCompatActivity {
     ArrayList<Book> books;
     AutoCompleteTextView titleTxt;
     AutoCompleteTextView authorTxt;
-    //
     TextView quoteTextView;
 
     Context context;
@@ -80,15 +79,11 @@ public class ViewQuote extends AppCompatActivity {
         int quoteID = (int) getIntent().getExtras().getLong("QUOTE_ID");
         quote = database.getQuote(db, quoteID);
 
-        if (quote.getQuoteText().equals("Error")) {
-            //CODE for TESTING
-            quote = database.getLogFile(db);
-        }
-
         //Textbox
         quoteTextView = (TextView) findViewById(R.id.quoteText);
         quoteTextView.setText(quote.getQuoteText());
 
+        //Set up scrollable text view
         ScrollView scrollView = (ScrollView) findViewById(R.id.scrollView);
         scrollView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -97,8 +92,8 @@ public class ViewQuote extends AppCompatActivity {
             }
         });
 
+        //Get image file location
         File imgFile = new File(quote.getCombinedImageURI());
-
         if(imgFile.exists()){
 
             //Get screen dimensions
@@ -249,9 +244,6 @@ public class ViewQuote extends AppCompatActivity {
         //Update quote text
         database.updateQuoteText(db, quote.getQuoteId(), quoteText);
 
-        //Update local quote data
-        //quote.getBook().setTitle(title);
-        //quote.getBook().setAuthor(author);
 
         //Remove book id from quote id database if fields are empty
         if (title.equals("") && author.equals("")) {
@@ -276,33 +268,15 @@ public class ViewQuote extends AppCompatActivity {
 
     }
 
-    /*
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putLong("quoteID", quoteID);
-    }*/
 
     private void backToQuoteList(){
 
         //Clear the backstack
-                    /*
-                    if (fromHighlighterPage == false){
-                        FragmentManager fragmentManager = getFragmentManager();
-                        // this will clear the back stack and displays no animation on the screen
-                        fragmentManager.popBackStackImmediate(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-                    }*/
-        //if (fromHighlighterPage == false){
-        //getFragmentManager().popBackStack();
-        //}
-        //else{
         Intent intent = new Intent(this, MainActivity.class);
         MainActivity.pagerPosition = 1;
         MainActivity.viewPager.setCurrentItem(1);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();
-        //}
-
-        //getActivity().finishAffinity();
     }
 }

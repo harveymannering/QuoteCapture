@@ -57,6 +57,7 @@ public class QuoteListFragment extends Fragment {
             return value;
         }
 
+        //In what order are the quotes displayed (based on the drop down)
         public static SortingOrder fromInteger(int x) {
             switch(x) {
                 case 0:
@@ -81,7 +82,6 @@ public class QuoteListFragment extends Fragment {
         }
 
     };
-
     SortingOrder sortOrder;
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -134,11 +134,12 @@ public class QuoteListFragment extends Fragment {
                 int[] ListImages = {0,0,0,0};
 
                 if (sortOrder.getValue() > 3)
-                    ListImages[sortOrder.getValue() - 4] = R.drawable.ic_arrow_upward_black_24dp;
+                    ListImages[sortOrder.getValue() - 4] = R.drawable.ic_arrow_upward_black_24dp; //Set ascending arrow
                 else
-                    ListImages[sortOrder.getValue()] = R.drawable.ic_arrow_downward_black_24dp;
+                    ListImages[sortOrder.getValue()] = R.drawable.ic_arrow_downward_black_24dp; //Set descending arrow
 
 
+                //viewMappings contains A title and icon for each item in the drop down box
                 List<HashMap<String, String>> viewMappings = new ArrayList<HashMap<String, String>>();
                 for (int x = 0; x < ListText.length; x++){
                     HashMap<String, String> hm = new HashMap<String, String>();
@@ -218,6 +219,7 @@ public class QuoteListFragment extends Fragment {
         ft.commit();
     }
 
+    //gets location of the drop down Sort By view (which is actually a pop up)
     public static Rect locateView(View v)
     {
         int[] loc_int = new int[2];

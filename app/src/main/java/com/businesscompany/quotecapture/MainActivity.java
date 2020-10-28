@@ -4,9 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import android.content.Intent;
@@ -26,7 +23,6 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
 
         //Request permissions if not already granted
         requestStoragePermission();
-        //ActivityCompat.RequestPermissionsRequestCodeValidator
 
         //Hide the status bar
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -34,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
 
         setContentView(R.layout.activity_main);
 
+        //Add all views including the camera display
         BuildUI();
 
     }
@@ -41,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
     //Add the pager to the screen which contains the camera and the quotes list
     private void BuildUI(){
         viewPager = (ViewPager) findViewById(R.id.viewpager);
-        viewPager.setAdapter(new MyAdapter(getSupportFragmentManager()));
+        viewPager.setAdapter(new MainPagerAdapter(getSupportFragmentManager()));
 
     }
 
@@ -53,12 +50,14 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
     }
 
     @Override
+    //Takes user to last page they were on
     protected void onResume() {
         super.onResume();
         viewPager.setCurrentItem(pagerPosition);
     }
 
     @Override
+    //Remember where user was on the camera of quote list page
     protected void onPause() {
         super.onPause();
         pagerPosition = viewPager.getCurrentItem();
@@ -66,30 +65,20 @@ public class MainActivity extends AppCompatActivity implements QuoteList.Listene
 
     @Override
     public void itemClicked(long id) {
-        //Set up new fragment and fragment manager
-        /*ViewQuoteFragment viewQuote = new ViewQuoteFragment(false);
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.small_fragment_container, viewQuote, "ViewQuoteFragment");
-
-
-
-        //Fragment transition parameters
-        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-        ft.addToBackStack(null);
-        ft.commit();
-
-        viewQuote.setQuoteID(id);*/
+        //Used for the quote list
         Intent viewQuote = new Intent(this, ViewQuote.class);
         viewQuote.putExtra("QUOTE_ID", id);
-        //viewQuote.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(viewQuote);
     }
 
     private void requestStoragePermission() {
+        //Read image from file
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
             return;
+        //Write images to file
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
             return;
+        //Access to the camera
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
             return;
 

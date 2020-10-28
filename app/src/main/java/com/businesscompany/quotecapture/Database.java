@@ -18,7 +18,7 @@ import java.util.Locale;
 
 public class Database extends SQLiteOpenHelper {
     private static final String DB_NAME = "QuoteCaptureDB";
-    private static final int DB_VERSION = 4;
+    private static final int DB_VERSION = 5;
 
     Database(Context context){
         super(context, DB_NAME, null, DB_VERSION);
@@ -81,6 +81,11 @@ public class Database extends SQLiteOpenHelper {
                     "MESSAGE TEXT)");
             db.execSQL("ALTER TABLE SETTINGS ADD COLUMN DEVELOPER_MODE INT DEFAULT 0");
         }
+
+        if (oldVersion < 5){
+            //DELETE THE LOG TABLE
+            db.execSQL("DROP TABLE DEVELOPER_LOG");
+        }
     }
 
     public void updateSettings(SQLiteDatabase db, int sortBy){
@@ -123,61 +128,6 @@ public class Database extends SQLiteOpenHelper {
 
         }
         return developer_mode == 0 ? false : true;
-    }
-
-    public Quote getLogFile(SQLiteDatabase db){
-        String logText = "";
-        try{
-            //Define cursor for accessing data
-            Cursor cursor = db.query("DEVELOPER_LOG",
-                    new String[] {"MESSAGE TEXT",
-                            "DATE DATETIME",},
-                    null, null, null, null, null);
-
-            //Move cursor to first record
-            if (cursor.moveToFirst()){
-                logText += cursor.getString(1) + " - " + cursor.getString(0) + " \n" ;
-
-                //Loop until all records have been processed
-                while (cursor.moveToNext()) {
-                    logText += cursor.getString(1) + " - " + cursor.getString(0) + " \n" ;
-                }
-            }
-
-            //Close database resources
-            cursor.close();
-
-        } catch (Exception e) {
-
-        }
-
-        return new Quote(logText);
-    }
-
-
-    public void log(SQLiteDatabase db, String message){
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        ContentValues logValues = new ContentValues();
-
-        //Add parameters
-        logValues.put("DATE", dateFormat.format(Calendar.getInstance().getTime()));
-        logValues.put("MESSAGE", message);
-
-        //Run the SQL (and returns the id)
-        db.insert("DEVELOPER_LOG", null, logValues);
-
-        //Delete old records
-        long count = DatabaseUtils.queryNumEntries(db, "DEVELOPER_LOG");
-        if (count > 10000){
-            Cursor c = db.query("DEVELOPER_LOG", new String[] {"_id"}, null, null, null, null, "DATE", "1");
-            if (c.moveToFirst()){
-                String id = c.getString(0);
-                c.close();
-                db.delete("DEVELOPER_LOG", "_id = " + id, null);
-            }
-        }
-
     }
 
     //Adds a quote to the table
@@ -423,10 +373,12 @@ public class Database extends SQLiteOpenHelper {
     }
 
 
+    //Delete book from the database
     public void removeBook(SQLiteDatabase db, int bookID){
         db.delete("BOOK", "_id = " + bookID, null);
     }
 
+    //Gets all book currently in the database
     public ArrayList<Book> getAllBooks(SQLiteDatabase db){
         ArrayList<Book> returnBooks = new ArrayList<Book>();
 
@@ -588,7 +540,7 @@ public class Database extends SQLiteOpenHelper {
         return returnQuotes;
     }
 
-
+    //Removes picture user has taken once the quote referencing it has gone (this is like garbage collection)
     public static boolean DeleteInternalImage(String uri){
 
         File file = new File(uri);
@@ -601,170 +553,4 @@ public class Database extends SQLiteOpenHelper {
         }
 
     }
-
-    /*public void addActiveNotifications(SQLiteDatabase db, ArrayList<Integer> notificationIds) {
-        for (Integer id : notificationIds){
-            //Add parameters
-            ContentValues itemValues = new ContentValues();
-            itemValues.put("NOTIFICATION_ID", id);
-
-            //Run the SQL
-            db.insert("ACTIVE_NOTIFICATIONS", null, itemValues);
-        }
-    }
-
-    public void deleteActiveNotification(SQLiteDatabase db, Integer notificationId) {
-        db.delete("ACTIVE_NOTIFICATIONS", "NOTIFICATION_ID = " + notificationId, null);
-    }
-
-    public ArrayList<Integer> getActiveNotifications(SQLiteDatabase db) {
-        ArrayList<Integer> output = new ArrayList<Integer>();
-
-        try{
-            //Define cursor for accessing data
-            Cursor cursor = db.rawQuery("SELECT NOTIFICATION_ID FROM ACTIVE_NOTIFICATIONS", null);
-
-            //Move cursor to first record
-            if (cursor.moveToFirst()){
-                output.add(cursor.getInt(0));
-
-                //Loop until all records have been processed
-                while (cursor.moveToNext()) {
-                    output.add(cursor.getInt(0));
-                }
-            }
-
-            //Close database resources
-            cursor.close();
-
-        } catch (Exception e) {
-
-        }
-
-        return output;
-    }
-
-    public boolean isNotificationEnabled(SQLiteDatabase db){
-        //Query the database
-        Cursor cursor = db.rawQuery("SELECT NOTIFICATIONS_ENABLED FROM SETTINGS", null);
-
-        //Look at results of query
-        if (cursor.moveToFirst()){
-            int enabled = cursor.getInt(0);
-            if (enabled == 1)
-                return true;
-            else
-                return false;
-        }
-
-        return false;
-    }
-
-    public boolean isSettingDisplayed(SQLiteDatabase db, String setting_name){
-        //Query the database
-        Cursor cursor = db.rawQuery("SELECT " + setting_name +" FROM SETTINGS", null);
-
-        //Look at results of query
-        if (cursor.moveToFirst()){
-            int enabled = cursor.getInt(0);
-            if (enabled == 1)
-                return true;
-            else
-                return false;
-        }
-
-        return false;
-    }
-
-    public int getStartDay(SQLiteDatabase db){
-        //Query the database
-        Cursor cursor = db.rawQuery("SELECT START_DAY FROM SETTINGS", null);
-
-        //Look at results of query
-        if (cursor.moveToFirst())
-            return cursor.getInt(0);
-
-        return 0;
-    }
-
-    public int getNotificationMinutes(SQLiteDatabase db){
-        //Query the database
-        Cursor cursor = db.rawQuery("SELECT NOTIFICATION_MINUTES FROM SETTINGS", null);
-
-        //Look at results of query
-        if (cursor.moveToFirst())
-            return cursor.getInt(0);
-
-        return 0;
-    }
-
-    public void updateSettings(SQLiteDatabase db, boolean notificationsEnabled, int day, int notificationMinutes, boolean displayDates){
-
-        //Convert enabled booleans into an ints
-        int notifications_enabled_int = 0;
-        int display_dates_int = 0;
-        if (notificationsEnabled)
-            notifications_enabled_int = 1;
-        if (displayDates)
-            display_dates_int = 1;
-
-        //Define input parameters
-        ContentValues settings = new ContentValues();
-        settings.put("NOTIFICATIONS_ENABLED", notifications_enabled_int);
-        settings.put("START_DAY", day);
-        settings.put("NOTIFICATION_MINUTES", notificationMinutes);
-        settings.put("DISPLAY_DATES", display_dates_int);
-
-        //Update database
-        db.update("SETTINGS", settings, null, null);
-    }
-
-    //Adds an item to the ITEM table, this represents one activity on the planner screen
-    public void insertItem(SQLiteDatabase db, PlannerItem item){
-        //Useful objects
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        ContentValues itemValues = new ContentValues();
-
-        //Add parameters
-        itemValues.put("TITLE", item.getTitle());
-        itemValues.put("DESCRIPTION", item.getDescription());
-        itemValues.put("PRIORITY", item.getPriority());
-        itemValues.put("START_DATE", dateFormat.format(item.getStartDate()));
-        itemValues.put("END_DATE", dateFormat.format(item.getEndDate()));
-        itemValues.put("COLOUR", item.getColour());
-        itemValues.put("COMPLETED", 0);
-        itemValues.put("REPEAT_INTERVAL", item.getRepeat_interval());
-        itemValues.put("REPEAT_INTERVAL_NUMBER", item.getRepeat_interval_number());
-        itemValues.put("ENDS_AFTER", item.getEnds_after());
-        itemValues.put("MONTHLY_REPEAT_MODE", item.getMonthly_repeat_mode());
-        itemValues.put("WEEKDAYS", item.getWeekdays());
-
-        //Run the SQL
-        db.insert("ITEM", null, itemValues);
-    }
-
-    //Updates an item to the ITEM table
-    public void updateItem(SQLiteDatabase db, PlannerItem item){
-        //Useful objects
-        SimpleDateFormat dateFormat = new SimpleDateFormat(
-                "yyyy-MM-dd HH:mm:ss", Locale.getDefault());
-        ContentValues itemValues = new ContentValues();
-
-        //Add parameters
-        itemValues.put("TITLE", item.getTitle());
-        itemValues.put("DESCRIPTION", item.getDescription());
-        itemValues.put("PRIORITY", item.getPriority());
-        itemValues.put("START_DATE", dateFormat.format(item.getStartDate()));
-        itemValues.put("END_DATE", dateFormat.format(item.getEndDate()));
-        itemValues.put("COLOUR", item.getColour());
-        itemValues.put("REPEAT_INTERVAL", item.getRepeat_interval());
-        itemValues.put("REPEAT_INTERVAL_NUMBER", item.getRepeat_interval_number());
-        itemValues.put("ENDS_AFTER", item.getEnds_after());
-        itemValues.put("MONTHLY_REPEAT_MODE", item.getMonthly_repeat_mode());
-        itemValues.put("WEEKDAYS", item.getWeekdays());
-        db.update("ITEM", itemValues, "_id="+item.getId(), null);
-
-        db.delete("REPEATED_ITEMS", "ITEM_ID = " + item.getId(), null);
-    }*/
 }

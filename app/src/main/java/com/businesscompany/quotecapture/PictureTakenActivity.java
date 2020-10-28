@@ -275,7 +275,6 @@ public class PictureTakenActivity extends AppCompatActivity {
                 dialog = ProgressDialog.show(PictureTakenActivity.this, "",
                         getResources().getString(R.string.loading), true);
 
-                //String highlightedImageURI = dv.SaveCanvas();
                 new Thread(new Runnable() {
                     public void run() {
                         //if the image has been rotated the image will need to be resaved
@@ -351,6 +350,7 @@ public class PictureTakenActivity extends AppCompatActivity {
 
                     }
 
+                    //Saves bitmap to file
                     public void saveBitmap(File file, Bitmap bitmap){
                         try {
                             FileOutputStream ostream;
@@ -407,6 +407,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                     seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                         @Override
                         public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                            //Change brush size
                             brushSize = progress;
                             setHighlighterWidth();
                             circleView.drawCircle();
@@ -464,44 +465,6 @@ public class PictureTakenActivity extends AppCompatActivity {
         colorButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                //Developer mode timer
-                Timer timer = new Timer();
-                dev_mode_count++;
-                if (hasTimerStarted == false) {
-                    hasTimerStarted = true;
-                    //Timer used to toggle developer mode
-                    TimerTask timerTask = new TimerTask() {
-                        private Handler updateUI = new Handler(){
-                            @Override
-                            public void dispatchMessage(Message msg) {
-                                super.dispatchMessage(msg);
-                                if (dev_mode_count >= 25) {
-                                    Database database = new Database(getApplicationContext());
-                                    SQLiteDatabase db = database.getWritableDatabase();
-                                    if (database.isDeveloperModeOn(db) == false) {
-                                        database.setDeveloperMode(db, true);
-                                        Toast.makeText(getApplicationContext(), "Developer Mode On", Toast.LENGTH_SHORT).show();
-                                    }
-                                    else if (database.isDeveloperModeOn(db) == true) {
-                                        database.setDeveloperMode(db, false);
-                                        Toast.makeText(getApplicationContext(), "Developer Mode Off", Toast.LENGTH_SHORT).show();
-                                    }
-                                    dev_mode_count = 0;
-                                }else{
-                                    dev_mode_count--;
-                                }
-                                hasTimerStarted = false;
-                            }
-                        };
-
-                        public void run() {
-                            try {
-                                updateUI.sendEmptyMessage(0);
-                            } catch (Exception e) {e.printStackTrace(); }
-                        }
-                    };
-                    timer.schedule(timerTask, 5000);
-                }
                 //Remove the brush size popup if its currently being displayed
                 if (PopupBrushSize != null)
                     RemoveBrushSizePopup();
@@ -683,8 +646,7 @@ public class PictureTakenActivity extends AppCompatActivity {
                         (animationSetCanvas == null || animationSetCanvas.hasEnded()) &&
                         (anim1 == null || anim1.hasEnded()) &&
                         (anim2 == null || anim2.hasEnded())) {
-                    //disables drawing
-                    //drawingViews.peek().setEnabled(false);
+
                     //Add invisible splash screen to disable touch event during animation
                     splashScreen = new LinearLayout(getBaseContext());
                     splashScreen.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
@@ -707,7 +669,6 @@ public class PictureTakenActivity extends AppCompatActivity {
                             RotateAnimation.RELATIVE_TO_SELF, 0.5f);
                     rotateAnimCanvas.setDuration(200);
                     rotateAnimCanvas.setFillAfter(true);
-                    //image.startAnimation(rotateAnim);
 
                     rotations += 1;
                     rotations %= 4;
@@ -742,7 +703,6 @@ public class PictureTakenActivity extends AppCompatActivity {
                     scaleAnimImage.setDuration(200);
                     scaleAnimCanvas.setFillAfter(true); // Needed to keep the result of the animation
                     scaleAnimCanvas.setDuration(200);
-                    //image.startAnimation(scaleAnim);
 
                     //Animations collections
                     animationSetImage = new AnimationSet(true);
@@ -899,7 +859,6 @@ public class PictureTakenActivity extends AppCompatActivity {
         int padding_x = (displaySize.x - bitmapHighlighting.getWidth()) / 2;
         Bitmap outputimage = Bitmap.createBitmap(bitmapHighlighting.getWidth() + padding_x,bitmapHighlighting.getHeight() + padding_y, Bitmap.Config.ARGB_8888);
         Canvas can = new Canvas(outputimage);
-        //can.drawARGB(FF,FF,FF,FF); //This represents White color
         can.drawBitmap(bitmapHighlighting, padding_x, padding_y, null);
 
 
@@ -946,13 +905,8 @@ public class PictureTakenActivity extends AppCompatActivity {
         drawingViews.add(dv);
         highlightingSwitcher.showNext();
         viewsHaveBeenSwitched = true;
-        //dv.setRotation(90);
-        //dv.setScaleX(1/scale);
-        //dv.setScaleY(1/scale);
 
     }
-
-    //private void
 
     private void ToggleEraser(){
         if (eraserToggle == true)
@@ -995,6 +949,7 @@ public class PictureTakenActivity extends AppCompatActivity {
 
     }
 
+    //Fades out colour bar
     void RemoveColourPopup(){
         if (PopupColourRemoved == false) {
             PopupColourRemoved = true;
@@ -1009,6 +964,7 @@ public class PictureTakenActivity extends AppCompatActivity {
         }
     }
 
+    //Fades out brush size bar
     void RemoveBrushSizePopup(){
         if (PopupSizeRemoved == false) {
             PopupSizeRemoved = true;
@@ -1053,23 +1009,11 @@ public class PictureTakenActivity extends AppCompatActivity {
         Path currentPath;
         boolean isRotation;
 
-        //private Paint circlePaint;
-        //private Path circlePath;
-
         public DrawingView(Context c) {
             super(c);
             context = c;
             //Initalize the paths array
             linesDrawn = new ArrayList<Pair<Path, Paint>>();
-
-            //mBitmapPaint = new Paint(Paint.DITHER_FLAG);
-            /*circlePaint = new Paint();
-            circlePath = new Path();
-            circlePaint.setAntiAlias(true);
-            circlePaint.setColor(Color.BLUE);
-            circlePaint.setStyle(Paint.Style.STROKE);
-            circlePaint.setStrokeJoin(Paint.Join.MITER);
-            circlePaint.setStrokeWidth(4f);*/
         }
 
         @Override
@@ -1086,14 +1030,17 @@ public class PictureTakenActivity extends AppCompatActivity {
             isRotation = true;
         }
 
+        //Load image into a bitmap
         public void loadImage(int w, int h){
             if (isRotation == false ) {
                 if (quoteID > 0) {
+                    //If an image is being edited
                     Database database = new Database(getApplicationContext());
                     SQLiteDatabase db = database.getReadableDatabase();
                     Quote q = database.getQuote(db, quoteID);
                     mBitmap = ImageProcessor.LoadHighlightedImageIntoBitmap(q.getHighlightedImagedURI(), displaySize);
                 } else
+                    //if a photo has just been taken
                     mBitmap = ImageProcessor.LoadBlankImageIntoBitmap(uriString, displaySize);
             }
             canvasWidth = displaySize.x;
@@ -1122,13 +1069,13 @@ public class PictureTakenActivity extends AppCompatActivity {
         private static final float TOUCH_TOLERANCE = 4;
 
         private void touch_start(float x, float y) {
-            //mPath.reset();
             currentPath = new Path();
             currentPath.moveTo(x, y);
             mX = x;
             mY = y;
         }
 
+        //Add a new part to the path that is to be drawn
         private void touch_move(float x, float y) {
             float dx = Math.abs(x - mX);
             float dy = Math.abs(y - mY);
@@ -1137,15 +1084,12 @@ public class PictureTakenActivity extends AppCompatActivity {
                     currentPath.quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
                     mX = x;
                     mY = y;
-                    //circlePath.reset();
-                    //circlePath.addCircle(mX, mY, 30, Path.Direction.CW);
                 }
             }
         }
 
         private void touch_up() {
             currentPath.lineTo(mX, mY);
-            //circlePath.reset();
             // commit the path to our offscreen
             loadImage(canvasWidth, canvasHeight);
             //Make a copy of the current paint object
@@ -1155,7 +1099,6 @@ public class PictureTakenActivity extends AppCompatActivity {
             //Save the current path
             linesDrawn.add(new Pair<Path, Paint>(currentPath, paintCopy));
             currentPath = null;
-            //mCanvas.drawPath(currentPath,  currentPaint);
             // kill this so we don't double draw
             //mPath.reset();
             if (!drawingViews.peek().equals(this))
@@ -1229,11 +1172,13 @@ public class PictureTakenActivity extends AppCompatActivity {
             drawCircle();
         }
 
+        //Touch canvas should remove circle
         public boolean onTouchEvent(MotionEvent event) {
             RemoveBrushSizePopup();
             return true;
         }
 
+        //draws a circle on the canvas (when user is picking a brush size)
         public void drawCircle() {
             int x = getWidth();
             int y = getHeight();

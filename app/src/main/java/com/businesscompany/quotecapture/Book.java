@@ -2,6 +2,7 @@ package com.businesscompany.quotecapture;
 
 public class Book {
 
+    //Data class for bookID title and author
     private int bookId;
     private String title;
     private String author;

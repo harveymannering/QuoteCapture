@@ -33,26 +33,17 @@ public class QuoteList extends ListFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
+        //Get all quotes currently stored
         Database database = new Database(getContext());
         SQLiteDatabase db = database.getReadableDatabase();
         quotes = database.getAllQuotes(db);
-        database.log(db, "e");
 
-        //Display log file id developer mode is on
-        if (database.isDeveloperModeOn(db))
-            quotes.add(database.getLogFile(db));
-
+        //Only quote ids are needed
         List<String> names = new ArrayList<String>();
         for (Quote q : quotes)
             names.add(q.getQuoteId() + "");
 
-            /*ArrayAdapter<Quote> adapter = new ArrayAdapter<Quote>(
-                    inflater.getContext(),
-                    android.R.layout.,
-                    quotes
-            ); */
-
-        setListAdapter(new MyAdapter(getContext(), quotes));
+        setListAdapter(new MyListAdapter(getContext(), quotes));
         return super.onCreateView(inflater, container, savedInstanceState);
     }
 
@@ -61,18 +52,19 @@ public class QuoteList extends ListFragment {
         this.listener = (Listener) context;
     }
 
+    //Returns quoteID for a selected quote
     public void onListItemClick(ListView listView, View itemView, int position, long id) {
         if (listener != null) {
             listener.itemClicked(quotes.get(position).getQuoteId());
         }
     }
 
-    class MyAdapter extends BaseAdapter {
+    class MyListAdapter extends BaseAdapter {
 
         private Context context;
         private ArrayList<Quote> quotes;
 
-        public MyAdapter(Context context, ArrayList<Quote> quotes) {
+        public MyListAdapter(Context context, ArrayList<Quote> quotes) {
             this.context = context;
             this.quotes = quotes;
         }
@@ -95,8 +87,8 @@ public class QuoteList extends ListFragment {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
+            //Two line list item, list format already built into android
             TwoLineListItem twoLineListItem;
-
             if (convertView == null) {
                 LayoutInflater inflater = (LayoutInflater) context
                         .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -106,14 +98,19 @@ public class QuoteList extends ListFragment {
                 twoLineListItem = (TwoLineListItem) convertView;
             }
 
+            //Two label views that will store the Quote + book title
             TextView text1 = twoLineListItem.getText1();
             TextView text2 = twoLineListItem.getText2();
 
+            //... at the end if quote is too long
             text1.setEllipsize(TextUtils.TruncateAt.END);
             text1.setMaxLines(2);
+            //Set quotes text
             text1.setText("\"" + quotes.get(position).getQuoteText() + "\"");
+            //Build subtext string
             String subtext = "";
             if (quotes.get(position).getBook() != null) {
+                //Text will be TITLE by AUTHOR format, unless one of those values doesnt exist
                 if (quotes.get(position).getBook().getTitle() != null && !quotes.get(position).getBook().getTitle().equals("")) {
                     subtext += quotes.get(position).getBook().getTitle();
                     if (quotes.get(position).getBook().getAuthor() != null && !quotes.get(position).getBook().getAuthor().equals(""))
